@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Spreadsheet</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/handsontable/11.1.0/handsontable.full.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handsontable/11.1.0/handsontable.full.min.js"></script>
+    <script src="https://unpkg.com/hyperformula@0.9.1/dist/Hyperformula.bundle.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        h1 {
+            color: #4CAF50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            color: #2196F3;
+            margin-bottom: 30px;
+        }
+
+        #spreadsheet {
+            width: 80%;
+            max-width: 1200px;
+            height: 80vh;
+            border: 1px solid #ccc;
+        }
+
+        @media screen and (min-width: 1200px) {
+            body {
+                font-size: 20px; /* Adjust font size for large screens */
+            }
+            #spreadsheet {
+                width: 90%;
+                height: 80vh;
+            }
+        }
+
+        @media screen and (max-width: 1024px) {
+            #spreadsheet {
+                width: 100%;
+                height: 70vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Interactive Spreadsheet Application</h1>
+    <p>Welcome! This page allows you to create and manage your data with an Excel-like spreadsheet. You can enter data, apply formulas, and format cells. The application supports basic functions like SUM, AVERAGE, VLOOKUP, and more. Use the grid below to get started!</p>
+    <div id="spreadsheet"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('#spreadsheet');
+
+            // Handsontable Grid Setup
+            const hot = new Handsontable(container, {
+                data: Array.from({ length: 50 }, () => Array(25).fill('')),  // 50 rows, 25 columns
+                colHeaders: Array.from({ length: 25 }, (_, i) => String.fromCharCode(65 + i)),  // A to Y
+                rowHeaders: true,
+                contextMenu: true,
+                manualColumnResize: true,
+                manualRowResize: true,
+                formulas: true,  // Enable formula support
+                licenseKey: 'non-commercial-and-evaluation',
+                height: '100%',
+                width: '100%',
+                stretchH: 'all',  // Ensure the columns stretch to fill the grid width
+                autoColumnSize: true,
+            });
+
+            // HyperFormula Setup for Calculations
+            const hfInstance = HyperFormula.buildEmpty();
+            hfInstance.addSheet("Sheet1");
+
+            // Formula Calculation Example (can be extended to more complex formulas)
+            function calculateFormula() {
+                const cellValue = hfInstance.getCellValue("Sheet1", 0, 0);  // Get the value from A1
+                console.log('Cell A1 value:', cellValue);
+            }
+
+            // Number Formatting (Currency, Percentage, Decimal Precision)
+            hot.addHook('afterChange', function(changes, source) {
+                if (source === 'edit') {
+                    const cell = changes[0][0];  // Get the cell address
+                    const value = hot.getDataAtCell(changes[0][0], changes[0][1]);
+
+                    // Example number formatting
+                    if (!isNaN(value)) {
+                        hot.setCellMeta(cell[0], cell[1], 'type', 'numeric');
+                    }
+                }
+            });
+
+            // Drag Formula Functionality
+            hot.addHook('afterSelectionEnd', function(r, c, r2, c2) {
+                const formula = hot.getDataAtCell(r, c);
+                if (formula && formula.startsWith('=')) {
+                    hot.setDataAtCell(r2, c2, formula);
+                }
+            });
+        });
+    </script>
+</body>
+  </html>
